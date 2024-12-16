@@ -1,0 +1,85 @@
+import openai
+import re
+import pandas as pd
+
+def load_transcript(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+    return content
+
+def preprocess_transcript_with_context(transcript):
+    # Include moderator lines and surrounding context
+    lines = transcript.split('\n')
+    relevant_lines = []
+    for i, line in enumerate(lines):
+        if "Meaghan (Moderator)" in line:
+            # Add the moderator line and adjacent lines for context
+            relevant_lines.extend(lines[max(0, i-1):i+2])
+    # Remove duplicates and join
+    return '\n'.join(sorted(set(relevant_lines), key=lines.index))
+
+def analyze_with_gpt(transcript):
+    openai.api_key = " " 
+    
+    prompt = (
+        "You are an assistant that identifies the main overarching questions asked by a moderator in a focus group transcript. "
+        "The moderator's name is always 'Meaghan (Moderator)'. Extract only the main overarching questions contextually relevant to the group discussion. "
+        "Include only the most important questions driving group discussion. "
+        "Here is the transcript:\n\n" + transcript + "\n\nPlease list only the main overarching group questions asked by the moderator in the transcript."
+    )
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Extract main overarching group questions from transcripts."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response['choices'][0]['message']['content']
+    except openai.error.RateLimitError as e:
+        print("Rate limit exceeded. Please try again later.")
+        return ""
+    except openai.error.OpenAIError as e:
+        print(f"OpenAI error: {e}")
+        return ""
+
+# Path to your file
+file_path = "Downloads/11.20.24 Biden-Trump Voters (First-Time Trump Voters)_otter_ai.txt"
+
+# Load and preprocess the transcript
+transcript = load_transcript(file_path)
+preprocessed_transcript = preprocess_transcript_with_context(transcript)
+
+# Analyze the transcript with GPT
+main_questions = analyze_with_gpt(preprocessed_transcript)
+
+# Display the extracted overarching questions
+print("Main Overarching Questions Asked by the Moderator:")
+print(main_questions)
+
+# Set your API key
+openai.api_key = " "
+
+# Load transcript
+def load_transcript(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return file.read()
+
+# Filter main questions to exclude any with "raise your hand"
+def filter_main_questions(main_questions):
+    if not isinstance(main_questions, list):
+        raise ValueError("Expected a list of questions")
+    # Keep questions that do not contain 'raise your hand'
+    return [q for q in main_questions if "raise your hand" not in q.lower()]
+  
+  
+file_path = "Downloads/11.20.24 Biden-Trump Voters (First-Time Trump Voters)_otter_ai.txt"
+
+transcript = load_transcript(file_path)
+transcript
+
+# Filter out raise hands from main_questions
+main_questions_list = main_questions.split('\n')  # Ensure it’s a list
+filtered_questions = filter_main_questions(main_questions_list)
+print(filtered_questions)
