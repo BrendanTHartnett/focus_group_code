@@ -1,0 +1,53 @@
+import re
+from pathlib import Path
+
+# List of focus group respondents
+speaker_names = [
+    "Charles P", "Chris M", "Ciara N", "David O",
+    "Harvey H", "Molly P", "Olivia S", "Ruth R", "Tiana C"
+]
+
+# Input: Transcript text
+transcript_text = transcript
+
+# Directory to save individual speaker files
+output_folder = Path("./Focus_Group_Responses")
+output_folder.mkdir(exist_ok=True)
+
+# Dictionary to accumulate each speaker's comments
+speaker_comments = {name: [] for name in speaker_names}
+
+# Split the transcript into lines
+lines = transcript_text.splitlines()
+
+# Track current speaker and collect their comments
+current_speaker = None
+for i, line in enumerate(lines):
+    line = line.strip()
+    if not line:
+        continue  # Skip blank lines
+    
+    # Check if the line starts with any speaker's name
+    for name in speaker_names:
+        if line.startswith(name):
+            current_speaker = name
+            break
+    else:
+        # Skip moderator comments (lines that start with 'Meaghan (Moderator)')
+        if line.startswith("Meaghan (Moderator)"):
+            current_speaker = None
+        # If we're collecting and it's not a speaker line, append the text to current speaker
+        elif current_speaker and line:
+            speaker_comments[current_speaker].append(line)
+
+# Write out all unique files per speaker
+for speaker_name, all_comments in speaker_comments.items():
+    file_name = f"{speaker_name.replace(' ', '_')}.txt"
+    file_path = output_folder / file_name
+
+    # Combine all comments for the speaker
+    combined_comments = "\n\n".join(all_comments)
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(combined_comments)
+
+print(f"All respondent files saved to: {output_folder.resolve()}")
