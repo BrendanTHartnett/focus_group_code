@@ -1,0 +1,10 @@
+# Regex pattern to match speaker names before their comments
+pattern = r"\n\n([A-Z][a-zA-Z]+\s?[A-Z]*\.?)\s\d{2}\.\d{2}\.\d{2}"
+
+# Extract all unique speaker names
+speaker_names = set(re.findall(pattern, transcript))
+
+# Print the sorted list of names
+print("Focus Group Respondents:")
+for name in sorted(speaker_names):
+    print(name)
